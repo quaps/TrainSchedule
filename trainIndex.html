@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Train Schedule</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="jumbotron">
+    <h1>Train Schedule</h1> 
+  </div>
+</div>
+
+    <div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3>Train Schedule</h3>
+                </div>
+                <div class="panel-body" id="table">
+                    <div class="row bar">
+                        <div class="col-md-2">Train Line</div>                     
+                        <div class="col-md-2">Destination</div>
+                        <div class="col-md-2">Frequency</div>                        
+                        <div class="col-md-2">Next Arrival</div>                    
+                        <div class="col-md-2">Minutes Away</div>  
+                        <div class="col-md-2"></div>                      
+                    </div>
+                    <hr>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+	<div class="panel panel-default">
+		<div class="panel-heading">Add Train</div>
+		<div class="panel-body">
+			<form id = 'inputform'>
+				Train Name
+				<br>
+					<input type="text" class="form-control" id="trainName" name="trainName">
+				<br>
+				Destination
+				<br>
+					<input type="text" class="form-control" id="destination" name="destination">
+				<br>
+				<div class="form-group"> 
+				        <label class="control-label" for="date">frequency</label>
+				        <input class="form-control" id="frequency" name="frequency" placeholder="minutes" type="text"/>
+				      </div>
+				<br>
+			</form>
+		<button class="btn btn-primary" id="submit">Submit</button>
+		</div>
+	</div>
+</div>
+
+<style type="text/css">
+    }
+    .bar {
+        font-weight: bold;
+    }
+</style>
+
+<link rel="stylesheet" href="https://formden.com/static/cdn/bootstrap-iso.css" /> 
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+
+<script src="https://www.gstatic.com/firebasejs/3.7.0/firebase.js"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+      
+
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyDkBwCxEQn06TlN-0Pld594sykdX5-v5qA",
+        authDomain: "trainscheduler-64289.firebaseapp.com",
+        databaseURL: "https://trainscheduler-64289.firebaseio.com",
+        projectId: "trainscheduler-64289",
+        storageBucket: "trainscheduler-64289.appspot.com",
+        messagingSenderId: "180259949896"
+      };
+      firebase.initializeApp(config);
+
+      var database = firebase.database();
+
+      var trainName = "";
+      var destination = "";
+      var frequency = 0;
+      var nextArrival = 0;
+      var minutesAway = 0;
+      var currentTime = 0;
+
+      $("#submit").on("click", function(event){
+      	event.preventDefault();
+
+      	trainName = $("#trainName").val().trim();
+      	destination = $("#destination").val().trim();
+      	frequency = $("#frequency").val();
+        $("#inputform").trigger('reset');
+
+      	database.ref().push({
+	      	trainName: trainName,
+	        destination: destination,
+	        frequency: frequency,
+          nextArrival: nextArrival,
+          minutesAway: minutesAway,
+	        dateAdded: firebase.database.ServerValue.TIMESTAMP
+      	})
+      })
+
+		database.ref().orderByChild("date").on("child_added", function(snapshot) {
+      var sv = snapshot.val();
+
+      var start = "0000";
+      var time = moment(start,"HH:mm");
+      var d = moment(time).format('HH:mm');
+      var d = time.add(frequency, 'minutes');
+      var nextArrival = moment(sv.d);
+      var minutesAway = (moment(d).subtract(nextArrival,'minutes'));
+      
+      var table_row = $('<div class="row">');
+
+      var c1 = $('<div class="col-md-2">');
+      c1.text(sv.trainName);
+      table_row.append(c1);
+
+      var c2 = $('<div class="col-md-2">');
+      c2.text(sv.destination);
+      table_row.append(c2);
+
+      var c3 = $('<div class="col-md-2">');
+      c3.text(sv.frequency);
+      table_row.append(c3);
+
+      var c4 = $('<div class="col-md-2">');
+      c4.text(nextArrival);
+      table_row.append(c4);
+
+      var c5 = $('<div class="col-md-2">');
+      c5.text(minutesAway);
+      table_row.append(c5);
+
+      $('#table').append(table_row);
+      $('#table').append($('<hr>'));
+    }, 
+
+    function(errorObject) {
+      console.log("Errors: " + errorObject.code);
+      });
+
+    })
+
+</script>
+</body>
+</html>
